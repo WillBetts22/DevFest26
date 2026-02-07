@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { ArrowLeft, Send, Plus, X, ImageIcon, Pencil } from "lucide-react"
-import { useJournal } from "@/lib/journal-store"
+import { useJournal, STICKY_COLORS_DARK, STICKY_COLORS_LIGHT } from "@/lib/journal-store"
 import { Button } from "@/components/ui/button"
 import type { Sticky } from "@/lib/journal-store"
 
@@ -122,6 +122,12 @@ export function JournalEditor({ onBack }: JournalEditorProps) {
     updateSticky,
     removeSticky,
   } = useJournal()
+  const getThemeStickyColor = () => {
+    const isLight = document.documentElement.classList.contains("light")
+    const colors = isLight ? STICKY_COLORS_LIGHT : STICKY_COLORS_DARK
+    return colors[Math.floor(Math.random() * colors.length)]
+  }
+
   const [localAnswer, setLocalAnswer] = useState("")
   const [saved, setSaved] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -218,7 +224,7 @@ export function JournalEditor({ onBack }: JournalEditorProps) {
               variant="ghost"
               size="icon"
               className="h-7 w-7 rounded-full text-muted-foreground hover:text-foreground"
-              onClick={() => addSticky()}
+              onClick={() => addSticky({ color: getThemeStickyColor() })}
               aria-label="Add sticky"
             >
               <Plus className="h-4 w-4" />
@@ -238,7 +244,7 @@ export function JournalEditor({ onBack }: JournalEditorProps) {
             </div>
           ) : (
             <button
-              onClick={() => addSticky()}
+              onClick={() => addSticky({ color: getThemeStickyColor() })}
               className="w-full rounded-xl border border-dashed border-border/60 py-6 flex flex-col items-center gap-2 text-muted-foreground hover:text-foreground hover:border-border transition-colors"
             >
               <Plus className="h-4 w-4" />

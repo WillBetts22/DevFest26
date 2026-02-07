@@ -57,13 +57,23 @@ const PROMPTS = [
 
 const EMOTIONS = ["😊", "😤", "😢", "🤔", "😎"]
 
-const STICKY_COLORS = [
-  "hsl(220, 14%, 18%)",
-  "hsl(160, 20%, 16%)",
-  "hsl(38, 20%, 16%)",
-  "hsl(220, 20%, 20%)",
-  "hsl(280, 14%, 18%)",
+const STICKY_COLORS_DARK = [
+  "hsl(210, 4%, 19%)",
+  "hsl(160, 15%, 17%)",
+  "hsl(38, 15%, 17%)",
+  "hsl(210, 6%, 21%)",
+  "hsl(280, 10%, 19%)",
 ]
+
+const STICKY_COLORS_LIGHT = [
+  "hsl(35, 30%, 85%)",
+  "hsl(160, 25%, 85%)",
+  "hsl(38, 35%, 85%)",
+  "hsl(210, 20%, 87%)",
+  "hsl(280, 20%, 88%)",
+]
+
+const STICKY_COLORS = STICKY_COLORS_DARK
 
 // Helper
 function getToday(): string {
@@ -352,4 +362,4 @@ export function useJournal() {
   }
 }
 
-export { PROMPTS, EMOTIONS, STICKY_COLORS, getToday }
+export { PROMPTS, EMOTIONS, STICKY_COLORS, STICKY_COLORS_DARK, STICKY_COLORS_LIGHT, getToday }

@@ -6,6 +6,7 @@ import { HomePage } from "@/components/home-page"
 import { CalendarView } from "@/components/calendar-view"
 import { InsightsView } from "@/components/insights-view"
 import { StreakDisplay } from "@/components/streak-display"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 export default function Page() {
   const [activePage, setActivePage] = useState<"home" | "calendar" | "insights">("home")
@@ -42,7 +43,10 @@ export default function Page() {
               </h1>
             )}
           </div>
-          <StreakDisplay />
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <StreakDisplay />
+          </div>
         </header>
 
         {/* Content */}
