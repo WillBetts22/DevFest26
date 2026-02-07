@@ -8,7 +8,7 @@ const LABELS: Record<string, string> = {
   happy: "Happy",
   mad: "Mad",
   sad: "Sad",
-  sleepy: "Sleepy",
+  stressed: "Stressed",
   smiley: "Good",
 }
 
