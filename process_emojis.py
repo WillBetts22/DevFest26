@@ -6,7 +6,7 @@ emoji_files = {
     "happy": "happy.jpg",
     "mad": "mad.jpg",
     "sad": "sad.jpg",
-    "sleepy": "sleepy.jpg",
+    "stressed": "stressed.jpg",
     "smiley": "smiley.jpg"
 }
 
