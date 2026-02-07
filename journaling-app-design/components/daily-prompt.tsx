@@ -3,7 +3,7 @@
 import React from "react"
 
 import { useEffect, useState } from "react"
-import { RefreshCw, ArrowRight, Sparkles, Loader2 } from "lucide-react"
+import { RefreshCw, ArrowRight, Loader2 } from "lucide-react"
 import { useJournal } from "@/lib/journal-store"
 import { Button } from "@/components/ui/button"
 
@@ -25,44 +25,42 @@ async function fetchPersonalizedPrompt(
 }
 
 export function DailyPrompt({ onOpenJournal }: DailyPromptProps) {
-  const { todayEntry, getOrCreateTodayEntry, refreshPrompt, getRecentEntries } = useJournal()
+  const { todayEntry, getOrCreateTodayEntry, refreshPrompt, getRecentEntries, setPrompt } = useJournal()
   const [isLoadingAI, setIsLoadingAI] = useState(false)
-  const [isPersonalized, setIsPersonalized] = useState(false)
-  const [aiPrompt, setAiPrompt] = useState<string | null>(null)
 
   useEffect(() => {
     getOrCreateTodayEntry()
   }, [])
 
-  // Fetch AI prompt on mount
+  // Generate AI prompt once when entry is created and hasn't been personalized yet
   useEffect(() => {
+    if (!todayEntry || todayEntry.aiPromptGenerated) return
+
     const recentEntries = getRecentEntries(7)
-    if (recentEntries.length >= 7 && !aiPrompt) {
-      setIsLoadingAI(true)
-      const mapped = recentEntries.map((e) => ({
-        date: e.date,
-        prompt: e.prompt,
-        answer: e.answer,
-        emotion: e.emotion,
-      }))
-      fetchPersonalizedPrompt(mapped)
-        .then((prompt) => {
-          if (prompt) {
-            setAiPrompt(prompt)
-            setIsPersonalized(true)
-          }
-        })
-        .catch((err) => console.error("AI prompt error:", err))
-        .finally(() => setIsLoadingAI(false))
-    }
-  }, [getRecentEntries, aiPrompt])
+    if (recentEntries.length < 7) return
+
+    setIsLoadingAI(true)
+    const mapped = recentEntries.map((e) => ({
+      date: e.date,
+      prompt: e.prompt,
+      answer: e.answer,
+      emotion: e.emotion,
+    }))
+    fetchPersonalizedPrompt(mapped)
+      .then((prompt) => {
+        if (prompt) {
+          setPrompt(prompt, true)
+        }
+      })
+      .catch((err) => console.error("AI prompt error:", err))
+      .finally(() => setIsLoadingAI(false))
+  }, [todayEntry?.aiPromptGenerated])
 
   const handleRefresh = async (e: React.MouseEvent) => {
     e.stopPropagation()
     const recentEntries = getRecentEntries(7)
     if (recentEntries.length >= 7) {
       setIsLoadingAI(true)
-      setAiPrompt(null)
       try {
         const mapped = recentEntries.map((e) => ({
           date: e.date,
@@ -72,15 +70,12 @@ export function DailyPrompt({ onOpenJournal }: DailyPromptProps) {
         }))
         const prompt = await fetchPersonalizedPrompt(mapped)
         if (prompt) {
-          setAiPrompt(prompt)
-          setIsPersonalized(true)
+          setPrompt(prompt, true)
         } else {
           refreshPrompt()
-          setIsPersonalized(false)
         }
       } catch {
         refreshPrompt()
-        setIsPersonalized(false)
       } finally {
         setIsLoadingAI(false)
       }
@@ -92,7 +87,6 @@ export function DailyPrompt({ onOpenJournal }: DailyPromptProps) {
   if (!todayEntry) return null
 
   const hasAnswer = !!todayEntry.answer?.trim()
-  const displayPrompt = aiPrompt || todayEntry.prompt
 
   return (
     <button
@@ -100,17 +94,9 @@ export function DailyPrompt({ onOpenJournal }: DailyPromptProps) {
       className="w-full rounded-2xl bg-card border border-border p-5 text-left transition-colors hover:border-primary/30 group"
     >
       <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold tracking-widest uppercase text-muted-foreground">
-            {"Today's Prompt"}
-          </span>
-          {isPersonalized && (
-            <span className="flex items-center gap-1 text-xs text-primary/70">
-              <Sparkles className="h-3 w-3" />
-              AI
-            </span>
-          )}
-        </div>
+        <span className="text-xs font-semibold tracking-widest uppercase text-muted-foreground">
+          {"Today's Prompt"}
+        </span>
         <Button
           variant="ghost"
           size="icon"
@@ -128,7 +114,7 @@ export function DailyPrompt({ onOpenJournal }: DailyPromptProps) {
       </div>
 
       <p className="font-serif text-lg font-bold leading-snug text-foreground mb-3">
-        {isLoadingAI && !aiPrompt ? "Generating your personalized prompt..." : displayPrompt}
+        {isLoadingAI ? "Thinking of something just for you..." : todayEntry.prompt}
       </p>
 
       <div className="flex items-center justify-between">

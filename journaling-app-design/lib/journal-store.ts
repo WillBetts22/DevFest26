@@ -7,6 +7,7 @@ export interface JournalEntry {
   id: string
   date: string // YYYY-MM-DD
   prompt: string
+  aiPromptGenerated?: boolean
   answer: string
   emotion: string | null
   quickNotes: string[]
@@ -173,6 +174,20 @@ function refreshPrompt() {
     entries: {
       ...state.entries,
       [today]: { ...entry, prompt: newPrompt },
+    },
+  }
+  emitChange()
+}
+
+function setPrompt(prompt: string, aiGenerated = false) {
+  const today = getToday()
+  const entry = state.entries[today]
+  if (!entry) return
+  state = {
+    ...state,
+    entries: {
+      ...state.entries,
+      [today]: { ...entry, prompt, aiPromptGenerated: aiGenerated },
     },
   }
   emitChange()
@@ -374,6 +389,7 @@ export function useJournal() {
     getEntryForDate: (date: string) => journalState.entries[date] || null,
     getRecentEntries,
     seedData,
+    setPrompt,
   }
 }
 
