@@ -336,6 +336,19 @@ function saveEntry() {
   }
 }
 
+function getRecentEntries(count: number): JournalEntry[] {
+  const today = getToday()
+  return Object.values(state.entries)
+    .filter((e) => e.date !== today && e.answer?.trim())
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, count)
+}
+
+function seedData(seedState: JournalState) {
+  state = seedState
+  emitChange()
+}
+
 // Hook
 export function useJournal() {
   const journalState = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
@@ -359,6 +372,8 @@ export function useJournal() {
       (a, b) => b.createdAt - a.createdAt
     ),
     getEntryForDate: (date: string) => journalState.entries[date] || null,
+    getRecentEntries,
+    seedData,
   }
 }
 
