@@ -55,14 +55,14 @@ const PROMPTS = [
   "What's one thing you want to release before bed?",
 ]
 
-const EMOTIONS = ["😊", "😤", "😢", "🤔", "😎"]
+const EMOTIONS = ["happy", "mad", "sad", "sleepy", "smiley"]
 
 const STICKY_COLORS_DARK = [
-  "hsl(210, 4%, 19%)",
-  "hsl(160, 15%, 17%)",
-  "hsl(38, 15%, 17%)",
-  "hsl(210, 6%, 21%)",
-  "hsl(280, 10%, 19%)",
+  "hsl(210, 3%, 25%)",
+  "hsl(160, 12%, 23%)",
+  "hsl(38, 12%, 23%)",
+  "hsl(210, 5%, 27%)",
+  "hsl(280, 8%, 25%)",
 ]
 
 const STICKY_COLORS_LIGHT = [

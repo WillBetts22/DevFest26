@@ -2,7 +2,7 @@
 
 import React from "react"
 import { useMemo } from "react"
-import { TrendingUp, TrendingDown, Calendar, Flame, Award, Heart } from "lucide-react"
+import { TrendingUp, Calendar, Flame, Award } from "lucide-react"
 import { useJournal } from "@/lib/journal-store"
 
 interface InsightCard {
@@ -37,25 +37,37 @@ export function InsightsView() {
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
     const thisWeekEntries = entries.filter((e) => new Date(e.date + "T12:00:00") >= weekAgo)
 
-    const wordMap: Record<string, number> = {}
-    const skipWords = new Set([
-      "the", "a", "an", "is", "was", "are", "were", "i", "my", "me", "to",
-      "and", "of", "in", "it", "for", "on", "with", "that", "this", "but",
-      "not", "have", "had", "has", "been", "be", "do", "did", "will",
-      "would", "could", "should", "am", "about", "just", "really", "very",
-      "like", "from", "they", "them", "what", "when", "how", "all",
-    ])
+    // Theme detection: map keywords to higher-level themes
+    const THEME_MAP: Record<string, string[]> = {
+      "Gratitude": ["grateful", "thankful", "blessed", "appreciate", "appreciation", "fortunate", "lucky"],
+      "Growth": ["learn", "learned", "learning", "grow", "growing", "growth", "improve", "improving", "progress", "better", "evolve"],
+      "Calm": ["calm", "peaceful", "peace", "relaxed", "serene", "tranquil", "quiet", "still", "centered", "grounded"],
+      "Joy": ["happy", "joy", "joyful", "excited", "thrilled", "delighted", "wonderful", "amazing", "fantastic", "great", "awesome", "fun", "laugh"],
+      "Stress": ["stressed", "stress", "overwhelmed", "anxious", "anxiety", "worried", "worry", "tense", "pressure", "burnout", "exhausted"],
+      "Connection": ["friend", "friends", "family", "love", "loved", "together", "connection", "connected", "relationship", "support", "community"],
+      "Creativity": ["creative", "create", "created", "imagine", "inspired", "inspiration", "idea", "ideas", "design", "build", "write", "writing"],
+      "Resilience": ["strong", "strength", "brave", "courage", "overcome", "persevere", "endure", "tough", "resilient", "determined"],
+      "Rest": ["rest", "sleep", "tired", "recharge", "recover", "slow", "pause", "breathe", "unwind", "nap"],
+      "Focus": ["focus", "focused", "productive", "driven", "motivated", "discipline", "intentional", "purpose", "goal", "goals", "accomplish"],
+      "Reflection": ["reflect", "reflecting", "realize", "realized", "understand", "perspective", "clarity", "aware", "awareness", "mindful"],
+      "Change": ["change", "changing", "transition", "shift", "new", "different", "transform", "adapt", "moving", "restart"],
+    }
+
+    const themeCounts: Record<string, number> = {}
     for (const e of entries) {
       if (e.answer) {
-        for (const word of e.answer.toLowerCase().split(/\s+/)) {
-          const cleaned = word.replace(/[^a-z]/g, "")
-          if (cleaned.length > 2 && !skipWords.has(cleaned)) {
-            wordMap[cleaned] = (wordMap[cleaned] || 0) + 1
+        const words = e.answer.toLowerCase().split(/\s+/).map(w => w.replace(/[^a-z]/g, ""))
+        for (const [theme, keywords] of Object.entries(THEME_MAP)) {
+          for (const kw of keywords) {
+            const matches = words.filter(w => w === kw || (kw.length > 4 && w.startsWith(kw.slice(0, -1)))).length
+            if (matches > 0) {
+              themeCounts[theme] = (themeCounts[theme] || 0) + matches
+            }
           }
         }
       }
     }
-    const topWords = Object.entries(wordMap)
+    const topWords = Object.entries(themeCounts)
       .sort(([, a], [, b]) => b - a)
       .slice(0, 5)
 
@@ -101,44 +113,6 @@ export function InsightsView() {
     },
   ]
 
-  const wrappedCards = useMemo(() => {
-    const items: { text: string; detail: string; icon: React.ElementType }[] = []
-
-    if (insights.topEmotion) {
-      items.push({
-        text: `Your most frequent mood is ${insights.topEmotion[0]}`,
-        detail: `Logged ${insights.topEmotion[1]} times`,
-        icon: Heart,
-      })
-    }
-
-    if (insights.topWords.length > 0) {
-      items.push({
-        text: `You write about "${insights.topWords[0][0]}" the most`,
-        detail: `Mentioned ${insights.topWords[0][1]} times`,
-        icon: TrendingUp,
-      })
-    }
-
-    if (insights.totalWords > 100) {
-      items.push({
-        text: `${insights.totalWords.toLocaleString()} words written`,
-        detail: `~${Math.ceil(insights.totalWords / 250)} pages of reflection`,
-        icon: Award,
-      })
-    }
-
-    if (insights.totalNotes > 0) {
-      items.push({
-        text: `${insights.totalNotes} shower thoughts captured`,
-        detail: "Those fleeting ideas are safe",
-        icon: TrendingDown,
-      })
-    }
-
-    return items
-  }, [insights])
-
   const oneYearAgo = useMemo(() => {
     const d = new Date()
     d.setFullYear(d.getFullYear() - 1)
@@ -165,35 +139,6 @@ export function InsightsView() {
           </div>
         ))}
       </div>
-
-      {/* Wrapped cards */}
-      {wrappedCards.length > 0 && (
-        <div className="flex flex-col gap-3">
-          <h3 className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground px-1">
-            Your Reflection Summary
-          </h3>
-          {wrappedCards.map((card, i) => (
-            <div
-              key={`wrapped-${i}`}
-              className="rounded-2xl bg-card border border-border overflow-hidden"
-            >
-              <div className="p-4">
-                <div className="flex items-start gap-3">
-                  <div className="h-9 w-9 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
-                    <card.icon className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-serif text-sm font-bold text-foreground leading-snug">
-                      {card.text}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{card.detail}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
 
       {/* Last year */}
       {oneYearAgo && (
