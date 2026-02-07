@@ -55,7 +55,7 @@ const PROMPTS = [
   "What's one thing you want to release before bed?",
 ]
 
-const EMOTIONS = ["happy", "mad", "sad", "sleepy", "smiley"]
+const EMOTIONS = ["happy", "mad", "sad", "stressed", "smiley"]
 
 const STICKY_COLORS_DARK = [
   "hsl(210, 3%, 25%)",
