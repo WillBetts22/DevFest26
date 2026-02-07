@@ -2,8 +2,45 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: Arial, Helvetica, sans-serif;
+/* Declare all font weights you need */
+@font-face {
+  font-family: 'SN Pro';
+  src: url('/fonts/sn-pro-regular.woff2') format('woff2');
+  font-weight: 400;  /* Regular */
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SN Pro';
+  src: url('/fonts/sn-pro-medium.woff2') format('woff2');
+  font-weight: 500;  /* Medium */
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SN Pro';
+  src: url('/fonts/sn-pro-semibold.woff2') format('woff2');
+  font-weight: 600;  /* Semibold */
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SN Pro';
+  src: url('/fonts/sn-pro-bold.woff2') format('woff2');
+  font-weight: 700;  /* Bold */
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SN Pro';
+  src: url('/fonts/sn-pro-black.woff2') format('woff2');
+  font-weight: 900;  /* Black */
+  font-style: normal;
+  font-display: swap;
 }
 
 @layer utilities {
@@ -48,39 +85,34 @@ body {
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
+  /* Dark gray theme */
   .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Background & foreground */
+    --background: 220 15% 12%;
+    --foreground: 220 15% 85%;
+
+    /* Cards / popovers */
+    --card: 220 15% 16%;
+    --card-foreground: 220 15% 85%;
+    --popover: 220 15% 16%;
+    --popover-foreground: 220 15% 85%;
+
+    /* Inputs & borders */
+    --input: 220 15% 18%;
+    --border: 220 15% 20%;
+
+    /* Muted / secondary UI */
+    --muted: 220 15% 18%;
+    --muted-foreground: 220 10% 60%;
+
+    /* Accent */
+    --accent: 220 15% 20%;
+    --accent-foreground: 220 15% 85%;
+
+    /* Primary actions (buttons, focus) */
+    --primary: 220 15% 85%;
+    --primary-foreground: 220 15% 12%;
   }
 }
 
@@ -88,7 +120,9 @@ body {
   * {
     @apply border-border;
   }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-family: "SN Pro", ui-sans-serif, system-ui, sans-serif;
   }
 }

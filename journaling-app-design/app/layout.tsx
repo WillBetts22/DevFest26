@@ -1,11 +1,10 @@
 import React from "react"
 import type { Metadata, Viewport } from 'next'
-import { Inter, Space_Grotesk } from 'next/font/google'
+import { Funnel_Display } from 'next/font/google'
 
 import './globals.css'
 
-const _inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
-const _spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-space-grotesk' })
+const funnelDisplay = Funnel_Display({ subsets: ['latin'], variable: '--font-funnel-display' })
 
 export const metadata: Metadata = {
   title: 'Mellow - Journal Your Way',
@@ -34,7 +33,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="font-sans antialiased">{children}</body>
+      <body className={`${funnelDisplay.variable} font-sans antialiased`}>{children}</body>
     </html>
   )
 }
