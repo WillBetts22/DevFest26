@@ -1,3 +1,7 @@
+// Login page commented out — not needed for now
+// To re-enable, uncomment the code below
+
+/*
 "use client"
 
 import { useState } from "react"
@@ -6,8 +10,14 @@ import { supabase } from "@/lib/supabase"
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [sent, setSent] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState("")
 
-  async function signIn() {
+  async function signIn(e: React.FormEvent) {
+    e.preventDefault()
+    setLoading(true)
+    setErrorMessage("")
+
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
@@ -15,7 +25,14 @@ export default function LoginPage() {
       },
     })
 
-    if (!error) setSent(true)
+    setLoading(false)
+
+    if (error) {
+      console.error(error)
+      setErrorMessage(error.message)
+    } else {
+      setSent(true)
+    }
   }
 
   return (
@@ -28,23 +45,37 @@ export default function LoginPage() {
             Check your email for the login link.
           </p>
         ) : (
-          <>
+
+          <form onSubmit={signIn} className="space-y-4">
+            {errorMessage && (
+              <p className="text-sm text-red-500">{errorMessage}</p>
+            )}
+
             <input
               type="email"
               placeholder="you@example.com"
               className="w-full rounded-md border px-3 py-2"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              disabled={loading}
+              required
             />
+
             <button
-              onClick={signIn}
-              className="w-full rounded-md bg-black px-3 py-2 text-white"
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-md bg-black px-3 py-2 text-white disabled:opacity-50"
             >
-              Send magic link
+              {loading ? "Sending..." : "Send magic link"}
             </button>
-          </>
+          </form>
         )}
       </div>
     </div>
   )
+}
+*/
+
+export default function LoginPage() {
+  return null
 }
