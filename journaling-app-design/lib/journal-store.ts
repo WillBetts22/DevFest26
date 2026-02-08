@@ -36,26 +36,26 @@ export interface JournalState {
 
 // Prompts pool
 const PROMPTS = [
-  "What made you smile today?",
-  "What's one thing you're grateful for right now?",
-  "If today had a theme song, what would it be?",
-  "What's something you learned about yourself recently?",
-  "Describe your ideal tomorrow in 3 sentences.",
-  "What's a fear you'd like to let go of?",
-  "Who made a difference in your day?",
-  "What would your future self thank you for today?",
-  "What's one small win you can celebrate?",
-  "If you could tell your younger self one thing, what would it be?",
-  "What boundary do you need to set or honor?",
-  "What's draining your energy right now?",
-  "What does 'enough' look like for you today?",
-  "What habit is silently shaping your life?",
-  "When did you last feel truly present?",
-  "What conversation do you keep avoiding?",
-  "What would you do if you weren't afraid of judgment?",
-  "What's a belief you've outgrown?",
-  "How did you show up for yourself today?",
-  "What's one thing you want to release before bed?",
+  "What's stressing you out the most this week?",
+  "Did you actually take care of yourself today or just survive?",
+  "What's one thing you're procrastinating on and why?",
+  "How are you feeling about your classes right now?",
+  "What's something you did today that future you will thank you for?",
+  "Who did you spend time with today and how did it make you feel?",
+  "What would you do differently if you could redo today?",
+  "Are you where you thought you'd be at this point in college?",
+  "What's one thing you wish you could tell your professor?",
+  "How are you managing your money this month — honestly?",
+  "What's keeping you up at night lately?",
+  "Did you compare yourself to someone today? What triggered it?",
+  "What's a relationship in your life that needs attention?",
+  "When's the last time you did something just because it was fun?",
+  "What's one thing about college nobody warned you about?",
+  "Are you chasing something because you want it or because you think you should?",
+  "How did you handle pressure today?",
+  "What's one boundary you need to start setting?",
+  "What would you do this semester if you weren't afraid of failing?",
+  "How's your mental health — like, really?",
 ]
 
 const EMOTIONS = ["happy", "mad", "sad", "stressed", "smiley"]
@@ -77,6 +77,9 @@ const STICKY_COLORS_LIGHT = [
 ]
 
 const STICKY_COLORS = STICKY_COLORS_DARK
+
+// Bump this version to force a prompt/data reset when content changes
+const STORE_VERSION = 2
 
 // Helper
 function getToday(): string {
@@ -119,6 +122,12 @@ function emitChange() {
 
 function loadState() {
   try {
+    const storedVersion = localStorage.getItem("mellow-journal-version")
+    if (storedVersion !== String(STORE_VERSION)) {
+      localStorage.removeItem("mellow-journal")
+      localStorage.setItem("mellow-journal-version", String(STORE_VERSION))
+      return
+    }
     const stored = localStorage.getItem("mellow-journal")
     if (stored) {
       state = JSON.parse(stored)

@@ -127,7 +127,7 @@ export function CalendarView() {
               onClick={() =>
                 setSelectedDate(day.dateStr === selectedDate ? null : day.dateStr)
               }
-              className={`aspect-square rounded-lg flex flex-col items-center justify-center gap-0.5 transition-all text-xs font-medium ${
+              className={`aspect-square rounded-lg flex flex-col items-center justify-center gap-0.5 transition-all text-[10px] font-medium overflow-hidden ${
                 isSelected
                   ? "bg-primary text-primary-foreground"
                   : isToday
@@ -138,7 +138,7 @@ export function CalendarView() {
               }`}
             >
               {day.emotion ? (
-                <span className="text-sm leading-none">{day.emotion}</span>
+                <span className="text-xs leading-none">{day.emotion}</span>
               ) : (
                 <span className="leading-none">{day.date}</span>
               )}
