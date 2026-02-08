@@ -5,9 +5,10 @@ const BUCKET = "voice-memos"
 /**
  * Upload an audio blob to Supabase Storage and return the public URL.
  */
-export async function uploadVoiceMemo(blob: Blob, mimeType: string): Promise<string> {
+export async function uploadVoiceMemo(blob: Blob, mimeType: string, userId?: string): Promise<string> {
   const ext = mimeType.includes("webm") ? "webm" : mimeType.includes("mp4") ? "mp4" : "ogg"
-  const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
+  const prefix = userId ? `${userId}/` : ""
+  const fileName = `${prefix}${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
 
   const { error } = await supabase.storage
     .from(BUCKET)

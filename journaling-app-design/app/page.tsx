@@ -1,15 +1,30 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { BottomNav } from "@/components/bottom-nav"
 import { HomePage } from "@/components/home-page"
 import { CalendarView } from "@/components/calendar-view"
 import { InsightsView } from "@/components/insights-view"
 import { StreakDisplay } from "@/components/streak-display"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { useAuth } from "@/lib/use-auth"
+import { setUser } from "@/lib/journal-store"
 
 export default function Page() {
+  const { user, loading } = useAuth()
   const [activePage, setActivePage] = useState<"home" | "calendar" | "insights">("home")
+
+  useEffect(() => {
+    setUser(user?.id ?? null)
+  }, [user])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-sm text-muted-foreground">Loading...</p>
+      </div>
+    )
+  }
 
   const pageTitle = {
     home: "Today",

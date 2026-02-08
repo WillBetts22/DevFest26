@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { Mic, Square } from "lucide-react"
-import { useJournal } from "@/lib/journal-store"
+import { useJournal, getCurrentUserId } from "@/lib/journal-store"
 import { Button } from "@/components/ui/button"
 import { uploadVoiceMemo } from "@/lib/voice-memo-storage"
 import { VoiceMemoList } from "@/components/voice-memo-list"
@@ -101,7 +101,7 @@ export function VoiceMemo() {
 
           // Try uploading to Supabase in the background
           if (memoId) {
-            uploadVoiceMemo(blob, mimeType)
+            uploadVoiceMemo(blob, mimeType, getCurrentUserId() ?? undefined)
               .then((supabaseUrl) => {
                 updateVoiceMemoUrl(memoId, supabaseUrl)
                 URL.revokeObjectURL(blobUrl)
