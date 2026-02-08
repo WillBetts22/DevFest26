@@ -11,7 +11,7 @@ export interface JournalEntry {
   answer: string
   emotion: string | null
   quickNotes: string[]
-  voiceMemos: { id: string; duration: number; timestamp: number }[]
+  voiceMemos: { id: string; duration: number; timestamp: number; url: string; mimeType: string }[]
   stickies: Sticky[]
   createdAt: number
 }
@@ -252,20 +252,48 @@ function removeQuickNote(index: number) {
   emitChange()
 }
 
-function addVoiceMemo(duration: number) {
+function addVoiceMemo(memo: { duration: number; url: string; mimeType: string }): string {
   const today = getToday()
   const entry = state.entries[today]
-  if (!entry) return
-  const memo = { id: generateId(), duration, timestamp: Date.now() }
+  if (!entry) return ""
+  const id = generateId()
+  const newMemo = {
+    id,
+    duration: memo.duration,
+    timestamp: Date.now(),
+    url: memo.url,
+    mimeType: memo.mimeType,
+  }
   state = {
     ...state,
     entries: {
       ...state.entries,
-      [today]: { ...entry, voiceMemos: [...entry.voiceMemos, memo] },
+      [today]: { ...entry, voiceMemos: [...entry.voiceMemos, newMemo] },
+    },
+  }
+  emitChange()
+  return id
+}
+
+function updateVoiceMemoUrl(memoId: string, newUrl: string) {
+  const today = getToday()
+  const entry = state.entries[today]
+  if (!entry) return
+  state = {
+    ...state,
+    entries: {
+      ...state.entries,
+      [today]: {
+        ...entry,
+        voiceMemos: entry.voiceMemos.map((m) =>
+          m.id === memoId ? { ...m, url: newUrl } : m
+        ),
+      },
     },
   }
   emitChange()
 }
+
 
 function addSticky(sticky?: Partial<Sticky>) {
   const today = getToday()
@@ -379,6 +407,7 @@ export function useJournal() {
     addQuickNote,
     removeQuickNote,
     addVoiceMemo,
+    updateVoiceMemoUrl,
     addSticky,
     updateSticky,
     removeSticky,

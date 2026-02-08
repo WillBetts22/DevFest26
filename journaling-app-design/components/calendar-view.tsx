@@ -4,6 +4,7 @@ import { useState, useMemo } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { useJournal } from "@/lib/journal-store"
 import { Button } from "@/components/ui/button"
+import { VoiceMemoList } from "@/components/voice-memo-list"
 
 const DAYS_OF_WEEK = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
@@ -40,7 +41,7 @@ export function CalendarView() {
         emotion: entry?.emotion || null,
         hasEntry:
           !!entry &&
-          (!!entry.answer || entry.quickNotes.length > 0 || entry.stickies.length > 0),
+          (!!entry.answer || entry.quickNotes.length > 0 || entry.stickies.length > 0 || entry.voiceMemos.length > 0),
       })
     }
 
@@ -192,8 +193,12 @@ export function CalendarView() {
             </div>
           )}
 
-          {!selectedEntry.answer && selectedEntry.quickNotes.length === 0 && (
-            <p className="text-sm text-muted-foreground">No written entries for this day.</p>
+          {selectedEntry.voiceMemos && selectedEntry.voiceMemos.length > 0 && (
+            <VoiceMemoList memos={selectedEntry.voiceMemos} showHeader />
+          )}
+
+          {!selectedEntry.answer && selectedEntry.quickNotes.length === 0 && (!selectedEntry.voiceMemos || selectedEntry.voiceMemos.length === 0) && (
+            <p className="text-sm text-muted-foreground">No entries for this day.</p>
           )}
         </div>
       )}

@@ -1,9 +1,11 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
-import { Mic, Square, Play, Pause } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
+import { Mic, Square } from "lucide-react"
 import { useJournal } from "@/lib/journal-store"
 import { Button } from "@/components/ui/button"
+import { uploadVoiceMemo } from "@/lib/voice-memo-storage"
+import { VoiceMemoList } from "@/components/voice-memo-list"
 
 function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60)
@@ -11,49 +13,129 @@ function formatTime(seconds: number): string {
   return `${m}:${s.toString().padStart(2, "0")}`
 }
 
+type RecorderStatus = "idle" | "requesting" | "recording"
+
 export function VoiceMemo() {
-  const { todayEntry, getOrCreateTodayEntry, addVoiceMemo } = useJournal()
-  const [isRecording, setIsRecording] = useState(false)
+  const { todayEntry, getOrCreateTodayEntry, addVoiceMemo, updateVoiceMemoUrl } = useJournal()
+
+  const [status, setStatus] = useState<RecorderStatus>("idle")
   const [recordingTime, setRecordingTime] = useState(0)
-  const [playingId, setPlayingId] = useState<string | null>(null)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const recordingTimeRef = useRef(0)
+
+  const streamRef = useRef<MediaStream | null>(null)
+  const recorderRef = useRef<MediaRecorder | null>(null)
+  const chunksRef = useRef<BlobPart[]>([])
 
   useEffect(() => {
     getOrCreateTodayEntry()
+  }, [getOrCreateTodayEntry])
+
+  // Cleanup if component unmounts while recording
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current)
+      if (recorderRef.current && recorderRef.current.state !== "inactive") {
+        recorderRef.current.stop()
+      }
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((t) => t.stop())
+      }
+    }
   }, [])
 
-  const startRecording = () => {
-    setIsRecording(true)
+  const isRecording = status === "recording"
+  const memos = todayEntry?.voiceMemos || []
+
+  const startRecording = async () => {
+    if (status !== "idle") return
+
+    setStatus("requesting")
     setRecordingTime(0)
-    intervalRef.current = setInterval(() => {
-      setRecordingTime((t) => t + 1)
-    }, 1000)
+    chunksRef.current = []
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      streamRef.current = stream
+
+      const recorder = new MediaRecorder(stream)
+      recorderRef.current = recorder
+
+      recorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) chunksRef.current.push(e.data)
+      }
+
+      recorder.onstart = () => {
+        setStatus("recording")
+        recordingTimeRef.current = 0
+        intervalRef.current = setInterval(() => {
+          recordingTimeRef.current += 1
+          setRecordingTime(recordingTimeRef.current)
+        }, 1000)
+      }
+
+      recorder.onstop = async () => {
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current)
+          intervalRef.current = null
+        }
+
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach((t) => t.stop())
+          streamRef.current = null
+        }
+
+        const mimeType = recorder.mimeType || "audio/webm"
+        const blob = new Blob(chunksRef.current, { type: mimeType })
+        const duration = recordingTimeRef.current
+
+        chunksRef.current = []
+        recorderRef.current = null
+        setRecordingTime(0)
+        setStatus("idle")
+
+        if (duration > 0 && blob.size > 0) {
+          // Save immediately with blob URL so it shows up right away
+          const blobUrl = URL.createObjectURL(blob)
+          const memoId = addVoiceMemo({ duration, url: blobUrl, mimeType })
+
+          // Try uploading to Supabase in the background
+          if (memoId) {
+            uploadVoiceMemo(blob, mimeType)
+              .then((supabaseUrl) => {
+                updateVoiceMemoUrl(memoId, supabaseUrl)
+                URL.revokeObjectURL(blobUrl)
+              })
+              .catch((err) => {
+                console.warn("Supabase upload failed, using local blob URL:", err)
+              })
+          }
+        }
+      }
+
+      recorder.start()
+    } catch (err) {
+      console.error(err)
+      setStatus("idle")
+      setRecordingTime(0)
+    }
   }
 
   const stopRecording = () => {
-    setIsRecording(false)
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current)
-      intervalRef.current = null
-    }
-    if (recordingTime > 0) {
-      addVoiceMemo(recordingTime)
-    }
-    setRecordingTime(0)
+    if (!recorderRef.current) return
+    if (recorderRef.current.state === "inactive") return
+    recorderRef.current.stop()
+    setStatus("idle")
   }
-
-  const togglePlay = (memoId: string) => {
-    setPlayingId(playingId === memoId ? null : memoId)
-  }
-
-  const memos = todayEntry?.voiceMemos || []
 
   return (
     <div className="rounded-2xl bg-card border border-border p-5">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <div
-            className={`h-7 w-7 rounded-lg flex items-center justify-center ${isRecording ? "bg-destructive/20" : "bg-primary/15"}`}
+            className={`h-7 w-7 rounded-lg flex items-center justify-center ${
+              isRecording ? "bg-destructive/20" : "bg-primary/15"
+            }`}
           >
             <Mic className={`h-3.5 w-3.5 ${isRecording ? "text-destructive" : "text-primary"}`} />
           </div>
@@ -82,42 +164,17 @@ export function VoiceMemo() {
       ) : (
         <button
           onClick={startRecording}
-          className="w-full flex items-center gap-3 rounded-xl bg-secondary/50 px-4 py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+          disabled={status === "requesting"}
+          className="w-full flex items-center gap-3 rounded-xl bg-secondary/50 px-4 py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
         >
           <Mic className="h-4 w-4" />
-          <span>Tap to record a thought...</span>
+          <span>{status === "requesting" ? "Requesting mic permission..." : "Tap to record a thought..."}</span>
         </button>
       )}
 
       {memos.length > 0 && (
-        <div className="flex flex-col gap-2 mt-3">
-          {memos.map((memo) => (
-            <div
-              key={memo.id}
-              className="flex items-center gap-3 rounded-xl bg-secondary/40 px-3 py-2.5"
-            >
-              <button
-                onClick={() => togglePlay(memo.id)}
-                className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary hover:bg-primary/20 transition-colors shrink-0"
-                aria-label={playingId === memo.id ? "Pause" : "Play"}
-              >
-                {playingId === memo.id ? (
-                  <Pause className="h-3.5 w-3.5" />
-                ) : (
-                  <Play className="h-3.5 w-3.5 ml-0.5" />
-                )}
-              </button>
-              <div className="flex-1 h-1 rounded-full bg-border overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-primary/50 transition-all"
-                  style={{ width: playingId === memo.id ? "60%" : "0%" }}
-                />
-              </div>
-              <span className="text-xs text-muted-foreground tabular-nums">
-                {formatTime(memo.duration)}
-              </span>
-            </div>
-          ))}
+        <div className="mt-3">
+          <VoiceMemoList memos={memos} />
         </div>
       )}
     </div>
