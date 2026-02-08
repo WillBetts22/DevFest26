@@ -1,13 +1,8 @@
 "use client"
+import { useSyncExternalStore, useCallback } from "react"
 
-import { useSyncExternalStore } from "react"
-import {
-  fetchAllEntries,
-  upsertEntry as dbUpsertEntry,
-  upsertManyEntries,
-  fetchStreak,
-  upsertStreak,
-} from "./entries"
+
+
 
 // Types
 export interface JournalEntry {
@@ -104,17 +99,7 @@ let state: JournalState = {
 
 let listeners: Set<() => void> = new Set()
 
-// Supabase sync state
-let currentUserId: string | null = null
-let isHydrating = false
-let syncTimer: ReturnType<typeof setTimeout> | null = null
-let streakDirty = false
 
-const SYNC_DEBOUNCE_MS = 500
-
-// ──────────────────────────────────────────────
-// Emit + Sync
-// ──────────────────────────────────────────────
 
 function emitChange() {
   // Notify React subscribers
@@ -127,114 +112,10 @@ function emitChange() {
     localStorage.setItem("mellow-journal", JSON.stringify(state))
   } catch {}
 
-  // Debounced Supabase sync (skip during hydration)
-  if (!isHydrating && currentUserId) {
-    scheduleSyncToday()
-  }
+  
 }
 
-function scheduleSyncToday() {
-  if (syncTimer) clearTimeout(syncTimer)
-  syncTimer = setTimeout(() => {
-    syncTimer = null
-    syncTodayToSupabase()
-  }, SYNC_DEBOUNCE_MS)
-}
 
-async function syncTodayToSupabase() {
-  if (!currentUserId) return
-  const today = getToday()
-  const entry = state.entries[today]
-  if (!entry) return
-
-  try {
-    await dbUpsertEntry(currentUserId, entry)
-  } catch (err) {
-    console.warn("Sync entry failed:", err)
-  }
-
-  if (streakDirty) {
-    streakDirty = false
-    try {
-      await upsertStreak(currentUserId, state.streak, state.lastEntryDate)
-    } catch (err) {
-      console.warn("Sync streak failed:", err)
-    }
-  }
-}
-
-// ──────────────────────────────────────────────
-// User / Auth integration
-// ──────────────────────────────────────────────
-
-async function loadFromSupabase(userId: string) {
-  isHydrating = true
-
-  try {
-    const [entries, streakData] = await Promise.all([
-      fetchAllEntries(userId),
-      fetchStreak(userId),
-    ])
-
-    const entriesMap: Record<string, JournalEntry> = {}
-    for (const entry of entries) {
-      entriesMap[entry.date] = entry
-    }
-
-    // Merge: if localStorage has entries not in Supabase, keep them and push up
-    const localOnlyEntries: JournalEntry[] = []
-    for (const [date, localEntry] of Object.entries(state.entries)) {
-      if (!entriesMap[date]) {
-        entriesMap[date] = localEntry
-        localOnlyEntries.push(localEntry)
-      }
-    }
-
-    state = {
-      entries: entriesMap,
-      streak: streakData.streak,
-      lastEntryDate: streakData.lastEntryDate,
-    }
-
-    isHydrating = false
-    emitChange()
-
-    // Migrate local-only entries to Supabase in background
-    if (localOnlyEntries.length > 0) {
-      upsertManyEntries(userId, localOnlyEntries).catch((err) =>
-        console.warn("Migration of local entries failed:", err)
-      )
-    }
-  } catch (err) {
-    console.error("loadFromSupabase failed:", err)
-    isHydrating = false
-  }
-}
-
-export function setUser(userId: string | null) {
-  if (userId === currentUserId) return
-
-  currentUserId = userId
-
-  if (userId) {
-    loadFromSupabase(userId)
-  } else {
-    // Logout: clear state
-    state = { entries: {}, streak: 0, lastEntryDate: null }
-    try {
-      localStorage.removeItem("mellow-journal")
-    } catch {}
-    emitChange()
-  }
-}
-
-export function getCurrentUserId(): string | null {
-  return currentUserId
-}
-
-// ──────────────────────────────────────────────
-// Load from localStorage (initial cache)
-// ──────────────────────────────────────────────
 
 function loadState() {
   try {
@@ -504,7 +385,7 @@ function updateStreak() {
   } else if (state.lastEntryDate !== today) {
     state = { ...state, streak: 1, lastEntryDate: today }
   }
-  streakDirty = true
+  
   emitChange()
 }
 
@@ -529,15 +410,7 @@ function seedData(seedState: JournalState) {
   state = seedState
   emitChange()
 
-  // Bulk-sync seeded entries to Supabase
-  if (currentUserId) {
-    upsertManyEntries(currentUserId, Object.values(seedState.entries)).catch((err) =>
-      console.warn("Seed sync failed:", err)
-    )
-    upsertStreak(currentUserId, seedState.streak, seedState.lastEntryDate).catch((err) =>
-      console.warn("Seed streak sync failed:", err)
-    )
-  }
+  
 }
 
 // Hook
