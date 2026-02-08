@@ -16,11 +16,11 @@ export function BottomNav({ active, onNavigate }: BottomNavProps) {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 bg-background/90 backdrop-blur-xl border-t border-border"
+      className="absolute bottom-0 left-0 right-0 z-40 bg-background/90 backdrop-blur-xl border-t border-border"
       role="navigation"
       aria-label="Main navigation"
     >
-      <div className="max-w-lg mx-auto flex items-center justify-around py-2 px-4">
+      <div className="flex items-center justify-around py-2 px-4">
         {items.map((item) => {
           const isActive = active === item.id
           return (

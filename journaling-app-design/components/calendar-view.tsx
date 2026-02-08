@@ -197,7 +197,48 @@ export function CalendarView() {
             <VoiceMemoList memos={selectedEntry.voiceMemos} showHeader />
           )}
 
-          {!selectedEntry.answer && selectedEntry.quickNotes.length === 0 && (!selectedEntry.voiceMemos || selectedEntry.voiceMemos.length === 0) && (
+          {selectedEntry.stickies && selectedEntry.stickies.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
+                Stickies
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {selectedEntry.stickies.map((sticky) => (
+                  <div
+                    key={sticky.id}
+                    className="rounded-xl p-2.5 min-h-[80px] flex flex-col gap-1.5 border border-border/40"
+                    style={{ backgroundColor: sticky.color }}
+                  >
+                    {sticky.mediaUrl && (
+                      <div className="rounded-lg overflow-hidden">
+                        {sticky.mediaType === "video" ? (
+                          <video
+                            src={sticky.mediaUrl}
+                            className="w-full h-24 object-cover rounded-lg"
+                            controls
+                          />
+                        ) : (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={sticky.mediaUrl}
+                            alt="Sticky media"
+                            className="w-full h-24 object-cover rounded-lg"
+                          />
+                        )}
+                      </div>
+                    )}
+                    {sticky.content && (
+                      <p className="text-xs text-foreground/80 leading-relaxed">
+                        {sticky.content}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {!selectedEntry.answer && selectedEntry.quickNotes.length === 0 && (!selectedEntry.voiceMemos || selectedEntry.voiceMemos.length === 0) && (!selectedEntry.stickies || selectedEntry.stickies.length === 0) && (
             <p className="text-sm text-muted-foreground">No entries for this day.</p>
           )}
         </div>

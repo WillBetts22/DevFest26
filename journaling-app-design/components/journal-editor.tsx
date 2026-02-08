@@ -160,7 +160,7 @@ export function JournalEditor({ onBack }: JournalEditorProps) {
   const stickies = todayEntry.stickies || []
 
   return (
-    <div className="fixed inset-0 z-50 bg-background flex flex-col">
+    <div className="absolute inset-0 z-50 bg-background flex flex-col">
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-4 border-b border-border">
         <Button

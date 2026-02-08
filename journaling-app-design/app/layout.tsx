@@ -33,7 +33,11 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${funnelDisplay.variable} font-sans antialiased`}>{children}</body>
+      <body className={`${funnelDisplay.variable} font-sans antialiased bg-neutral-950 flex items-center justify-center min-h-screen`}>
+        <div id="phone-frame" className="relative w-full max-w-[430px] h-screen max-h-[932px] overflow-hidden bg-background rounded-none sm:rounded-[2.5rem] sm:border sm:border-border sm:shadow-2xl">
+          {children}
+        </div>
+      </body>
     </html>
   )
 }

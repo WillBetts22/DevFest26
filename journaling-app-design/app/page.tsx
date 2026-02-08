@@ -25,8 +25,8 @@ export default function Page() {
   const greeting = now.getHours() < 12 ? "Good morning" : now.getHours() < 17 ? "Good afternoon" : "Good evening"
 
   return (
-    <div className="min-h-screen bg-background">
-      <main className="max-w-lg mx-auto px-4 pb-24">
+    <div className="h-full overflow-y-auto bg-background">
+      <main className="px-4 pb-24">
         {/* Header */}
         <header className="flex items-center justify-between pt-6 pb-4">
           <div>
